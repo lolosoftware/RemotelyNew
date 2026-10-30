@@ -20,7 +20,7 @@ services:
       Remotely_ApplicationOptions__DockerGatewayIp: 172.28.0.1
       Remotely_ConnectionStrings__SQLite: Data Source=/app/AppData/Remotely.db
     healthcheck:
-      test: [CMD, curl, --fail, http://localhost:5000/api/healthcheck]
+      test: [CMD, curl, --fail, -H, 'Host: remacces.groupe-mi.com', http://localhost:5000/api/healthcheck]
       interval: 30s
       timeout: 5s
       start_period: 60s

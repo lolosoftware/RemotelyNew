@@ -88,6 +88,10 @@ Le retour arrière consiste à arrêter la nouvelle instance puis restaurer ense
 
 ### Commandes de bascule pendant la maintenance
 
+**Geler les mises à jour avant la bascule.** Les agents peuvent rechercher automatiquement les nouveaux paquets. Pour conserver un contrôle du déploiement, ajouter temporairement le contenu de `npm-freeze-updates.conf` à la configuration Advanced du Proxy Host NPM existant, sans écraser ses autres réglages. Ce bloc retourne 503 sur les archives et scripts d'installation sous `/Content`, sans bloquer l'accueil, l'authentification ni les hubs. Sa syntaxe utilise les directives [if/return de Nginx](https://nginx.org/en/docs/http/ngx_http_rewrite_module.html). Vérifier que NPM accepte la configuration et que les URL de ZIP renvoient 503. Pendant ce gel, les téléchargements d'installation et d'assistance ZIP depuis l'interface sont aussi indisponibles.
+
+Le pilote doit donc utiliser le ZIP **hors ligne** `Remotely-Setup-win-x64.zip` fourni dans la release GitHub, avec le SHA-256 indiqué dans `RELEASE.json` du kit, vérifié avant extraction/exécution. Le ZIP contient tous les fichiers nécessaires, y compris le paquet agent signé. Le bloc NPM peut être conservé après la maintenance tant que le déploiement général n'est pas autorisé ; installer alors les agents manuellement avec le même paquet vérifié. Le retirer réactive les téléchargements et les recherches de mise à jour du parc : faire cette levée de gel explicitement, pas automatiquement au démarrage du serveur. Si des agents contournent NPM par une autre URL ou un accès direct au serveur, ce gel ne les couvre pas.
+
 Prérequis : Docker Compose v2 avec `--wait`, sauvegarde cohérente et vérifiée, clé de production sauvegardée, espace disque suffisant, fichiers `compose.npm.yml` et `.env.remotelynew` placés à côté du Compose historique et de `datas`. L'image de `.env.remotelynew` doit être figée par digest. Si des utilisateurs ont modifié la configuration depuis la sauvegarde, refaire la sauvegarde serveur arrêté avant la bascule.
 
 ```bash
