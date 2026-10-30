@@ -2,6 +2,10 @@
 param([ValidatePattern("^[a-z0-9][a-z0-9./:@_-]+$")][string]$Image = "ghcr.io/lolosoftware/remotelynew:0.1.1-dev")
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
+if (!(Get-Command docker -ErrorAction SilentlyContinue) -and $env:LOCALAPPDATA) {
+    $desktopBin = Join-Path $env:LOCALAPPDATA 'Programs/DockerDesktop/resources/bin'
+    if (Test-Path (Join-Path $desktopBin 'docker.exe')) { $env:PATH = $desktopBin + [IO.Path]::PathSeparator + $env:PATH }
+}
 if (Get-Command docker -ErrorAction SilentlyContinue) {
     Push-Location $repo
     $previousImage = $env:REMOTELY_IMAGE

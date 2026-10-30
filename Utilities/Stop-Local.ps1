@@ -2,6 +2,10 @@
 param()
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
+if (!(Get-Command docker -ErrorAction SilentlyContinue) -and $env:LOCALAPPDATA) {
+    $desktopBin = Join-Path $env:LOCALAPPDATA 'Programs/DockerDesktop/resources/bin'
+    if (Test-Path (Join-Path $desktopBin 'docker.exe')) { $env:PATH = $desktopBin + [IO.Path]::PathSeparator + $env:PATH }
+}
 if (Get-Command docker -ErrorAction SilentlyContinue) {
     Push-Location $repo
     try { docker compose -p remotely-local -f docker-compose/compose.local.yml down } finally { Pop-Location }

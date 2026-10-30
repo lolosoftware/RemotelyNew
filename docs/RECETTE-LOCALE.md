@@ -28,6 +28,14 @@ Installation manuelle confirmée par l'utilisateur : installation réussie et ap
 
 Les changements de focus, le consentement, le redémarrage Windows, l'antivirus/SmartScreen sur un poste neuf et la migration d'une sauvegarde de production restent à qualifier séparément. La session locale réussie ne vaut pas validation de tous ces scénarios.
 
+## Gestion dans Docker Desktop
+
+Le 30 octobre 2026, la recette a été transférée du moteur WSL `Remotely-Dev` vers le contexte Docker Desktop `desktop-linux`. Le conteneur `remotely-local-remotely-1` est sain et reste accessible sur `http://localhost:5080`. Les tests navigateur ont réussi après restauration.
+
+Une sauvegarde du volume, effectuée serveur arrêté, est conservée localement dans `.work/desktop-migration-20261030.tar` (données sensibles, hors Git). Elle a été restaurée dans le volume Docker Desktop `remotely-local_remotely_local_data`. Le volume WSL d'origine reste conservé, avec son ancien conteneur arrêté ; ne pas redémarrer les deux instances simultanément. La copie WSL ne reçoit plus les modifications effectuées dans Docker Desktop.
+
+Les utilitaires Start-Local et Stop-Local retrouvent désormais aussi la CLI Docker Desktop installée sous `%LOCALAPPDATA%/Programs/DockerDesktop/resources/bin`, même si elle est absente du PATH. Ils utilisent le contexte Docker actif ; sur ce PC, il s'agit de `desktop-linux`.
+
 ## Avant le réel
 
 HTTP est limité à une sélection explicite de boucle locale : il ne convient pas à un agent sur un autre poste. Le déploiement réel doit utiliser son origine HTTPS et une image figée, après sauvegarde et restauration testée de la configuration existante selon [EXPLOITATION.md](EXPLOITATION.md).
