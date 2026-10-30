@@ -32,6 +32,7 @@ jobs:
           [[ "$RELEASE_TAG" =~ ^v[0-9][a-zA-Z0-9._-]*$ ]]
           [[ "$IMAGE_TAG" =~ ^[0-9][a-zA-Z0-9._-]*$ ]]
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern server-linux-x64.zip --dir asset
+          RELEASE_SHA="$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq .sha)"
           mkdir context
           unzip -q asset/server-linux-x64.zip -d context
           test -f context/Server/Remotely_Server.dll
@@ -41,6 +42,6 @@ jobs:
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:$IMAGE_TAG"
           printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker build --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" --label "org.opencontainers.image.revision=$GITHUB_SHA" --tag "$IMAGE" context
+          docker build --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" --label "org.opencontainers.image.revision=$RELEASE_SHA" --tag "$IMAGE" context
           docker push "$IMAGE"
           printf 'Published image: %s\n' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"

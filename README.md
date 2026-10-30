@@ -39,7 +39,7 @@ dotnet restore Remotely.Build.slnx --locked-mode
 dotnet test Remotely.Build.slnx -c Release --no-restore
 ~~~
 
-.NET 10, Node 24 et pnpm 10.32.1 requis. Les modèles de CI sont dans docs/ci-templates ; leur activation dans .github/workflows attend la permission GitHub Workflows du jeton de publication. L'installateur se construit séparément avec votre clé publique épinglée ; Build-Release.ps1 automatise l'ensemble.
+.NET 10, Node 24 et pnpm 10.32.1 requis. Les workflows de tests et de publication GHCR sont dans .github/workflows. L'installateur se construit séparément avec votre clé publique épinglée ; Build-Release.ps1 automatise l'ensemble.
 
 ## Origine et licence
 
