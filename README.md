@@ -31,7 +31,7 @@ Le mode local HTTP est réservé à la recette sur ce PC. Pour des agents réels
 
 ## Reprendre le projet
 
-Lire [le guide de maintenance, de migration et de déploiement](docs/EXPLOITATION.md), puis [le périmètre et les limites de validation](docs/MODERNISATION.md). Le [compte rendu de recette locale](docs/RECETTE-LOCALE.md) précise les tests réussis et les vérifications restantes avant le réel.
+Lire [le guide de maintenance, de migration et de déploiement](docs/EXPLOITATION.md), puis [le périmètre et les limites de validation](docs/MODERNISATION.md). Le [compte rendu de recette locale](docs/RECETTE-LOCALE.md) précise les tests réussis et les vérifications restantes avant le réel. Le [guide de production avec NPM](docs/PRODUCTION-NPM.md) prépare la migration sans certificat éditeur payant.
 
 ~~~powershell
 pnpm --dir Server install --frozen-lockfile --ignore-scripts

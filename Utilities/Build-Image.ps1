@@ -25,6 +25,13 @@ Server/**/*.db
 '@
 [System.IO.File]::WriteAllText((Join-Path $release '.dockerignore'), $dockerIgnore)
 $nativeDocker = Get-Command docker -ErrorAction SilentlyContinue
+if (!$nativeDocker -and $env:LOCALAPPDATA) {
+    $desktopBin = Join-Path $env:LOCALAPPDATA 'Programs/DockerDesktop/resources/bin'
+    if (Test-Path (Join-Path $desktopBin 'docker.exe')) {
+        $env:PATH = $desktopBin + [IO.Path]::PathSeparator + $env:PATH
+        $nativeDocker = Get-Command docker -ErrorAction SilentlyContinue
+    }
+}
 if ($nativeDocker) { docker build --tag $Image $release }
 else { wsl.exe -d Remotely-Dev -u root --cd $release --exec docker build --tag $Image . }
 if ($LASTEXITCODE) { throw 'Image build failed.' }

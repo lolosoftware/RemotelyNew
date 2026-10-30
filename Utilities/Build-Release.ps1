@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory)][string]$PrivateKeyPath,
     [Parameter(Mandatory)][ValidateRange(1, [long]::MaxValue)][long]$ReleaseSequence,
+    [ValidateRange(1, 365)][int]$ManifestValidityDays = 14,
     [ValidateSet('win-x64','win-x86','linux-x64')][string[]]$RuntimeIdentifiers = @('win-x64', 'win-x86', 'linux-x64'),
     [string]$CertificateThumbprint,
     [string]$TimestampServer = "http://timestamp.digicert.com",
@@ -9,6 +10,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $PrivateKeyPath = (Resolve-Path -LiteralPath $PrivateKeyPath).Path
+$manifestExpiresUtc = [DateTimeOffset]::UtcNow.AddDays($ManifestValidityDays)
 $repo = Split-Path $PSScriptRoot -Parent
 function Sign-OwnedBinaries([string]$directory) {
     if (!$CertificateThumbprint) { return }
@@ -64,7 +66,7 @@ try {
         Copy-Item -LiteralPath (Join-Path $legacyOutput $desktopName) -Destination $portableDirectory
         [System.IO.Compression.ZipFile]::CreateFromDirectory((Join-Path $agentOutput 'Desktop'), (Join-Path $content ('Remotely-Support-' + $rid + '.zip')))
     }
-    & (Join-Path $PSScriptRoot 'Sign-UpdateArtifacts.ps1') -ArtifactDirectory $content -PrivateKeyPath $PrivateKeyPath -ReleaseSequence $ReleaseSequence
+    & (Join-Path $PSScriptRoot 'Sign-UpdateArtifacts.ps1') -ArtifactDirectory $content -PrivateKeyPath $PrivateKeyPath -ReleaseSequence $ReleaseSequence -ExpiresUtc $manifestExpiresUtc
     $rsa = [System.Security.Cryptography.RSA]::Create()
     $publicKeyPath = Join-Path $output 'update-public-key.pem'
     try {
@@ -82,7 +84,7 @@ try {
         }
         [System.IO.Compression.ZipFile]::CreateFromDirectory($setup, (Join-Path $content ('Remotely-Setup-' + $rid + '.zip')))
     }
-    & (Join-Path $PSScriptRoot 'Sign-UpdateArtifacts.ps1') -ArtifactDirectory $content -PrivateKeyPath $PrivateKeyPath -ReleaseSequence $ReleaseSequence
+    & (Join-Path $PSScriptRoot 'Sign-UpdateArtifacts.ps1') -ArtifactDirectory $content -PrivateKeyPath $PrivateKeyPath -ReleaseSequence $ReleaseSequence -ExpiresUtc $manifestExpiresUtc
     dotnet publish Server/Server.csproj -c Release -r linux-x64 --self-contained false -p:UseAppHost=false -o (Join-Path $output 'Server')
     if ($LASTEXITCODE) { throw 'Server publication failed.' }
     Copy-Item -LiteralPath $content -Destination (Join-Path $output 'Server/wwwroot') -Recurse -Force
