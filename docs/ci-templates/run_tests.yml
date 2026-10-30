@@ -1,0 +1,61 @@
+name: Build and security checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.32.1
+      - run: pnpm --dir Server install --frozen-lockfile --ignore-scripts
+      - run: pnpm --dir Server run build
+      - run: pnpm --dir Server test
+      - run: pnpm --dir Server audit --prod --audit-level moderate
+      - run: dotnet restore Remotely.Build.slnx --locked-mode
+      - run: dotnet build Remotely.Build.slnx -c Release --no-restore
+      - run: dotnet test Remotely.Build.slnx -c Release --no-build --no-restore
+      - name: Compile the native installer with an ephemeral test key
+        shell: pwsh
+        run: |
+          $rsa = [System.Security.Cryptography.RSA]::Create(3072)
+          $publicKey = Join-Path $env:RUNNER_TEMP 'installer-public.pem'
+          try { [System.IO.File]::WriteAllText($publicKey, $rsa.ExportSubjectPublicKeyInfoPem()) } finally { $rsa.Dispose() }
+          dotnet build Installer.Windows/Installer.Windows.csproj -c Release -p:UpdatePublicKeyPath=$publicKey
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - run: dotnet list Remotely.Build.slnx package --vulnerable --include-transitive
+      - name: Export dependency inventory
+        shell: pwsh
+        run: dotnet list Remotely.Build.slnx package --include-transitive --format json | Out-File dependency-inventory.json -Encoding utf8
+  linux-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore Tests/Server.Tests/Server.Tests.csproj --locked-mode
+      - run: dotnet test Tests/Server.Tests/Server.Tests.csproj -c Release --no-restore
+      - run: dotnet restore Desktop.Linux/Desktop.Linux.csproj --locked-mode
+      - run: dotnet build Desktop.Linux/Desktop.Linux.csproj -c Release --no-restore

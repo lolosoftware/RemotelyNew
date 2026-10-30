@@ -1,0 +1,6 @@
+services:
+  remotely:
+    build:
+      context: ..
+      dockerfile: Server/Dockerfile
+    pull_policy: build

@@ -1,0 +1,55 @@
+services:
+  remotely:
+    image: ${REMOTELY_IMAGE:?Set REMOTELY_IMAGE to your own versioned image or digest}
+    restart: unless-stopped
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - remotely_data:/app/AppData
+    networks:
+      - remotely
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: '8080'
+      AllowedHosts: ${REMOTELY_DOMAIN:?Set REMOTELY_DOMAIN in .env}
+      Remotely_ApplicationOptions__DbProvider: SQLite
+      Remotely_ApplicationOptions__DockerGatewayIp: 172.29.64.2
+      Remotely_ConnectionStrings__SQLite: Data Source=/app/AppData/Remotely.db
+    healthcheck:
+      test: [CMD, curl, --fail, http://localhost:8080/api/healthcheck]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    environment:
+      REMOTELY_DOMAIN: ${REMOTELY_DOMAIN:?Set REMOTELY_DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      remotely:
+        ipv4_address: 172.29.64.2
+    depends_on:
+      remotely:
+        condition: service_healthy
+networks:
+  remotely:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.64.0/24
+volumes:
+  remotely_data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,46 @@
+name: Publish own container image
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release containing server-linux-x64.zip from Build-Release.ps1
+        required: true
+        default: v0.1.0-dev
+      image_tag:
+        description: Immutable image version
+        required: true
+        default: 0.1.0-dev
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build and publish the complete signed release image
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9][a-zA-Z0-9._-]*$ ]]
+          [[ "$IMAGE_TAG" =~ ^[0-9][a-zA-Z0-9._-]*$ ]]
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern server-linux-x64.zip --dir asset
+          mkdir context
+          unzip -q asset/server-linux-x64.zip -d context
+          test -f context/Server/Remotely_Server.dll
+          test -f context/Server/wwwroot/Content/Remotely-Setup-win-x64.zip.sig
+          cp Server/Dockerfile.release context/Dockerfile
+          printf '*\n!Server\n!Server/**\nServer/AppData\nServer/**/*.private.pem\nServer/**/*.db\n' > context/.dockerignore
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:$IMAGE_TAG"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" --label "org.opencontainers.image.revision=$GITHUB_SHA" --tag "$IMAGE" context
+          docker push "$IMAGE"
+          printf 'Published image: %s\n' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"

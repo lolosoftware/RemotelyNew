@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { FrameBuffer } from '../../Server/wwwroot/src/FrameBuffer.js';
+function frame(payload=[1,2,3],x=0) { const bytes=new Uint8Array(28+payload.length);const h=new DataView(bytes.buffer);h.setInt32(0,payload.length,true);h.setFloat32(4,x,true);h.setFloat32(8,0,true);h.setFloat32(12,1920,true);h.setFloat32(16,1080,true);h.setBigUint64(20,123456789n,true);bytes.set(payload,28);return bytes; }
+test('reassembles an image across arbitrary chunks',async()=>{const b=new FrameBuffer(),f=frame();b.append(f.slice(0,9));assert.equal(await b.read(),undefined);b.append(f.slice(9,29));assert.equal(await b.read(),undefined);b.append(f.slice(29));const value=await b.read();assert.equal(value.timestamp,123456789);assert.deepEqual([...new Uint8Array(await value.image.arrayBuffer())],[1,2,3]);assert.equal(b.size,0);});
+test('keeps differential regions in order',async()=>{const b=new FrameBuffer();b.append(frame([1],10));b.append(frame([2],20));assert.equal((await b.read()).x,10);assert.equal((await b.read()).x,20);});
+test('rejects negative frame lengths and invalid geometry',async()=>{const b=new FrameBuffer();const f=frame();new DataView(f.buffer).setInt32(0,-1,true);b.append(f);await assert.rejects(()=>b.read(),/Invalid/);b.clear();b.append(frame([1],NaN));await assert.rejects(()=>b.read(),/Invalid/);});
+test('bounds the advertised frame size before waiting for more bytes',async()=>{const b=new FrameBuffer(),f=frame();new DataView(f.buffer).setInt32(0,FrameBuffer.maxFrameBytes+1,true);b.append(f);await assert.rejects(()=>b.read(),/Invalid/);});

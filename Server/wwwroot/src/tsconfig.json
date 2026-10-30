@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "strict": false,
+    "noEmitOnError": true,
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "es2022",
+    "module": "ESNext",
+    "allowJs": false,
+    "moduleResolution": "Bundler"
+  },
+  "exclude": [
+    "node_modules",
+    "obj",
+    "bin"
+  ],
+  "compileOnSave": true
+}

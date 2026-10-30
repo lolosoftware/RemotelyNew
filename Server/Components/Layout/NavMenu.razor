@@ -1,0 +1,102 @@
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject IAuthService AuthService
+@inject IDataService DataService
+
+<div class="ps-4 pb-1 pe-0 pt-0 navbar navbar-dark" style="background-color: rgba(0,0,0,0.3)">
+    <a class="navbar-brand text-start" href=""><div class="logo-title">@(string.IsNullOrWhiteSpace(_organization?.OrganizationName) ? "Remotely" : _organization.OrganizationName)</div><div class="logo-subtitle">Remote support</div></a>
+    <button class="navbar-toggler" aria-label="Toggle navigation" aria-expanded="@(!collapseNavMenu)" @onclick="ToggleNavMenu"><span class="navbar-toggler-icon"></span></button>
+</div>
+<nav class="@NavMenuCssClass" aria-label="Main navigation" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3"><NavLink class="nav-link" href="" Match="NavLinkMatch.All"><span class="oi oi-home" aria-hidden="true"></span> Home</NavLink></li>
+        <AuthorizeView Policy="@PolicyNames.OrganizationAdminRequired" Context="adminAccess">
+            <li class="nav-item px-3 pt-3 small text-muted">Administration</li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="deploy"><span class="oi oi-data-transfer-upload" aria-hidden="true"></span> Install agents</NavLink></li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="/Viewer" target="_blank"><span class="oi oi-monitor" aria-hidden="true"></span> Attended support</NavLink></li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="device-details"><span class="oi oi-info" aria-hidden="true"></span> Device details</NavLink></li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="user-options"><span class="oi oi-pencil" aria-hidden="true"></span> Preferences</NavLink></li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="manage-organization"><span class="oi oi-briefcase" aria-hidden="true"></span> Organization</NavLink></li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="branding"><span class="oi oi-brush" aria-hidden="true"></span> Branding</NavLink></li>
+            <li class="nav-item px-3"><NavLink class="nav-link" href="api-keys"><span class="oi oi-key" aria-hidden="true"></span> API keys</NavLink></li>
+            <AuthorizeView Policy="@PolicyNames.ServerAdminRequired" Context="serverAdminAccess">
+                <li class="nav-item px-3"><NavLink class="nav-link" href="server-logs"><span class="oi oi-document" aria-hidden="true"></span> Server logs</NavLink></li>
+                <li class="nav-item px-3"><NavLink class="nav-link" href="server-config"><span class="oi oi-wrench" aria-hidden="true"></span> Server settings</NavLink></li>
+            </AuthorizeView>
+        </AuthorizeView>
+        <AuthorizeView>
+            <Authorized>
+                <li class="nav-item px-3 mt-3"><NavLink class="nav-link" href="Account/Manage"><span class="oi oi-person" aria-hidden="true"></span> Account</NavLink></li>
+                <li class="nav-item px-3"><form action="Account/Logout" method="post"><AntiforgeryToken /><input type="hidden" name="ReturnUrl" value="" /><button type="submit" class="nav-link btn btn-link"><span class="oi oi-account-logout" aria-hidden="true"></span> Logout</button></form></li>
+            </Authorized>
+            <NotAuthorized>
+                <li class="nav-item px-3"><a class="nav-link" href="Account/Login">Log in</a></li>
+                @if (_isRegistrationEnabled) { <li class="nav-item px-3"><a class="nav-link" href="Account/Register">Register</a></li> }
+            </NotAuthorized>
+        </AuthorizeView>
+    </ul>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool _isRegistrationEnabled;
+    private RemotelyUser? _user;
+    private Organization? _organization;
+    private string? _currentUrl;
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await DataService.GetSettings();
+        _isRegistrationEnabled = settings.MaxOrganizationCount < 0 || DataService.GetOrganizationCount() < settings.MaxOrganizationCount;
+
+        await base.OnInitializedAsync();
+
+        _currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        var userResult = await AuthService.GetUser();
+
+        if (!userResult.IsSuccess)
+        {
+            return;
+        }
+
+        _user = userResult.Value;
+
+        if (!string.IsNullOrWhiteSpace(_user?.OrganizationID))
+        {
+            var orgResult = await DataService.GetOrganizationById(_user.OrganizationID);
+            if (orgResult.IsSuccess)
+            {
+                _organization = orgResult.Value;
+            }
+        }
+        else
+        {
+            var orgResult = await DataService.GetDefaultOrganization();
+            if (orgResult.IsSuccess)
+            {
+                _organization = orgResult.Value;
+            }
+        }
+    }
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : "";
+
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        InvokeAsync(StateHasChanged);
+    }
+}

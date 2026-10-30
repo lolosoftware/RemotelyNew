@@ -1,0 +1,14 @@
+<Solution>
+  <Project Path="Agent/Agent.csproj" />
+  <Project Path="Shared/Shared.csproj" />
+  <Project Path="Desktop.Native/Desktop.Native.csproj" />
+  <Project Path="Desktop.Shared/Desktop.Shared.csproj" />
+  <Project Path="Desktop.UI/Desktop.UI.csproj" />
+  <Project Path="Desktop.Win/Desktop.Win.csproj" />
+  <Project Path="Desktop.Linux/Desktop.Linux.csproj" />
+  <Project Path="Server/Server.csproj" />
+  <Project Path="Tests/Server.Tests/Server.Tests.csproj" />
+  <Project Path="Tests/Shared.Tests/Shared.Tests.csproj" />
+  <Project Path="Tests/Desktop.Win.Tests/Desktop.Win.Tests.csproj" />
+  <Project Path="Tests/LoadTester/LoadTester.csproj" />
+</Solution>

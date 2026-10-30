@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>Remotely_Install</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Shared/Helpers/InstallationPolicy.cs" Link="InstallationPolicy.cs" />
+    <Compile Include="../Shared/Helpers/UpdateSignatureVerifier.cs" Link="UpdateSignatureVerifier.cs" />
+    <EmbeddedResource Include="$(UpdatePublicKeyPath)" LogicalName="UpdatePublicKey.pem" Condition="Exists('$(UpdatePublicKeyPath)')" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.14" />
+  </ItemGroup>
+  <Target Name="RequirePinnedKey" BeforeTargets="BeforeBuild" Condition="!Exists('$(UpdatePublicKeyPath)')">
+    <Error Text="Provide -p:UpdatePublicKeyPath=absolute/path/to/public-key.pem. The installer must pin your release signing key." />
+  </Target>
+</Project>

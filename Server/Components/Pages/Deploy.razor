@@ -1,0 +1,45 @@
+@page "/deploy"
+@page "/downloads"
+@attribute [Authorize(Policy = PolicyNames.OrganizationAdminRequired)]
+@inherits AuthComponentBase
+@inject IWebHostEnvironment HostEnv
+@inject NavigationManager NavManager
+
+<h1>Install agents</h1>
+<p class="text-muted">Install the native agent on computers you manage. Technicians only need their browser.</p>
+<section class="card p-4 mb-4" aria-labelledby="windows-setup-title">
+    <h2 id="windows-setup-title" class="h4">Windows</h2>
+    <p>Download the complete setup bundle, extract it, then run <strong>Remotely_Install.exe</strong> as administrator. No PowerShell command or additional .NET installation is required.</p>
+    <label for="setup-server">HTTPS server</label><input id="setup-server" class="form-control mb-3" readonly value="@NavManager.BaseUri.TrimEnd('/')" />
+    <label for="setup-organization">Organization ID</label><input id="setup-organization" class="form-control mb-3" readonly value="@User?.OrganizationID" />
+    <p>For existing installations, setup detects and preserves the device identity and configuration. An update interrupts active remote sessions.</p>
+    <div class="d-flex gap-3 flex-wrap">
+        @foreach (var architecture in new[] { "x64", "x86" })
+        {
+            var file = $"Remotely-Setup-win-{architecture}.zip";
+            if (File.Exists(Path.Combine(HostEnv.WebRootPath, "Content", file)))
+            {
+                <a class="btn btn-primary" href="@($"/Content/{file}")">Download Windows @architecture setup</a>
+            }
+            else
+            {
+                <span class="alert alert-warning mb-0">Windows @architecture setup is not included in this server image. Publish a complete release to enable installation.</span>
+            }
+        }
+    </div>
+    <p class="small text-muted mt-3 mb-0">Setup verifies the package against the release key embedded in the installer. Check the publisher's code signature before running it. Logs are stored under %ProgramData%/Remotely/InstallerLogs. Do not disable antivirus protection.</p>
+</section>
+<section class="card p-4 mb-4">
+    <h2 class="h4">Linux X11</h2>
+    <p>Existing Linux installations and configuration remain compatible. The signed legacy installers are retained for migration; Linux deployment must be qualified on your target distribution.</p>
+    <a href="/Content/Remotely-Linux.zip">Download Linux agent files</a>
+</section>
+<section class="card p-4">
+    <h2 class="h4">Attended support</h2>
+    <p>Send the portable support application to a person who needs assistance. Extract the complete bundle and launch Remotely_Desktop.exe. No permanent service is installed.</p>
+    @if (File.Exists(Path.Combine(HostEnv.WebRootPath, "Content", "Remotely-Support-win-x64.zip")))
+    {
+        <a href="@($"/api/ClientDownloads/support-bundle/win-x64/{User?.OrganizationID}")">Download Windows x64 support bundle</a>
+    }
+    else { <span class="text-muted">Portable support application not included in this server image.</span> }
+</section>

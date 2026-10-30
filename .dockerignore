@@ -1,0 +1,9 @@
+.git
+.build
+.work
+**/bin
+**/obj
+**/node_modules
+**/AppData
+**/*.private.pem
+**/*.db

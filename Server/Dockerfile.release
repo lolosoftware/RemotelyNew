@@ -1,0 +1,14 @@
+# Build from a complete Utilities/Build-Release.ps1 output, not the source checkout.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+LABEL org.opencontainers.image.source="https://github.com/lolosoftware/RemotelyNew"
+RUN apt-get update && apt-get install --yes --no-install-recommends curl libfontconfig1 && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --chown=app:app Server/ ./
+RUN mkdir -p /app/AppData && chown app:app /app/AppData
+ENV ASPNETCORE_HTTP_PORTS=8080 ASPNETCORE_ENVIRONMENT=Production Remotely_ApplicationOptions__DbProvider=SQLite
+ENV Remotely_ConnectionStrings__SQLite="Data Source=/app/AppData/Remotely.db"
+USER app
+EXPOSE 8080
+VOLUME ["/app/AppData"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s CMD curl --fail http://localhost:8080/api/healthcheck || exit 1
+ENTRYPOINT ["dotnet", "Remotely_Server.dll"]

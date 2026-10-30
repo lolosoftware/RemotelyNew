@@ -1,0 +1,41 @@
+@attribute [Authorize]
+@inherits AuthComponentBase
+
+<h1 class="h3">Devices</h1>
+<p class="text-muted">Choose a computer to start remote control.</p>
+<div @onclick="ClearSelectedCard">
+    <div class="device-toolbar">
+        <div class="device-search"><label for="device-search">Search devices</label><input id="device-search" class="form-control" placeholder="Name, alias or tag" aria-label="Search devices" @bind="_filter" @bind:event="oninput" /></div>
+        <div class="device-filter"><input id="hideOfflineDevicesCheckbox" type="checkbox" @bind="_hideOfflineDevices" /><label for="hideOfflineDevicesCheckbox">Hide offline devices</label></div>
+        <button type="button" class="btn btn-secondary" @onclick="HandleRefreshClicked">Refresh</button>
+    </div>
+    @if (User?.IsAdministrator == true)
+    {
+        <details class="device-admin-filters mb-3">
+            <summary>Device management and filters</summary>
+            <div class="device-toolbar mt-3">
+                <div><label for="device-group">Device group</label><select id="device-group" class="form-control" @bind="_selectedGroupId"><option value="@_deviceGroupAll">All</option><option value="@_deviceGroupNone">None</option>@foreach (var group in _deviceGroups) { <option value="@group.ID">@group.Name</option> }</select></div>
+                <div><label for="device-sort">Sort by</label><select id="device-sort" class="form-control" @bind="_selectedSortProperty">@foreach (var prop in _sortableProperties) { <option value="@prop.Name">@GetDisplayName(prop)</option> }</select></div>
+                <button type="button" class="btn btn-secondary" aria-label="Reverse sort order" @onclick="ToggleSortDirection"><span class="oi @GetSortIcon()" aria-hidden="true"></span></button>
+                <button type="button" class="btn btn-secondary" @onclick="SelectAllCards">Select all</button>
+                <button type="button" class="btn btn-secondary" @onclick="WakeDevices">Wake group</button>
+            </div>
+        </details>
+    }
+    <div id="deviceListDiv" class="mb-4">
+        @if (DisplayedDevices.Length == 0)
+        {
+            <div role="status" class="device-empty p-4">No devices to display. Try another search or include offline devices. Your administrator can check your device group membership.</div>
+        }
+        @foreach (var device in DisplayedDevices)
+        {
+            <CascadingValue Value="this"><DeviceCard @key="device.ID" Device="device" /></CascadingValue>
+        }
+    </div>
+    <div class="device-pagination" aria-label="Device pages">
+        <button type="button" class="btn btn-secondary" aria-label="Previous page" disabled="@(_currentPage <= 1)" @onclick="PageDown">Previous</button>
+        <span>Page @_currentPage of @TotalPages</span>
+        <button type="button" class="btn btn-secondary" aria-label="Next page" disabled="@(_currentPage >= TotalPages)" @onclick="PageUp">Next</button>
+        <label for="devices-per-page">Per page</label><select id="devices-per-page" class="form-control" @bind="_devicesPerPage"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
+    </div>
+</div>

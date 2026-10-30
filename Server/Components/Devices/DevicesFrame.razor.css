@@ -1,0 +1,13 @@
+.device-toolbar { display:flex; align-items:end; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+.device-search { flex:1 1 18rem; max-width:38rem; }
+.device-search label,.device-toolbar label { display:block; margin-bottom:.4rem; }
+.device-filter { display:flex; align-items:center; gap:.5rem; min-height:2.4rem; }
+.device-filter label { display:inline; margin:0; }
+.device-filter input { width:1.1rem; height:1.1rem; }
+.device-admin-filters { border:1px solid #666; border-radius:.5rem; padding:.8rem 1rem; }
+.device-admin-filters summary { cursor:pointer; }
+.device-empty { border:1px dashed #777; border-radius:.75rem; max-width:48rem; }
+.device-pagination { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; }
+.device-pagination select { width:5.5rem; }
+#deviceListDiv { display:flex; flex-wrap:wrap; align-items:start; overflow-x:hidden; }
+@media(max-width:600px) { .device-toolbar { gap:.75rem; } .device-search { max-width:none; flex-basis:100%; } #deviceListDiv { display:block; } .device-pagination { font-size:.9rem; } }
