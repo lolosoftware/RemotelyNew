@@ -11,6 +11,8 @@
 
 ![Home membre — appareils fictifs de recette](docs/screenshots/home-member.png)
 
+Image publiée : **ghcr.io/lolosoftware/remotelynew:0.1.0-dev** — [préversion et paquets compilés](https://github.com/lolosoftware/RemotelyNew/releases/tag/v0.1.0-dev).
+
 ## Sur ce PC
 
 La distribution WSL **Remotely-Dev** contient Docker Engine et Compose. La recette locale utilise un volume propre et écoute uniquement sur la boucle locale.
