@@ -24,7 +24,13 @@ Server/**/*.private.pem
 Server/**/*.db
 '@
 [System.IO.File]::WriteAllText((Join-Path $release '.dockerignore'), $dockerIgnore)
-docker build --tag $Image $release
+$nativeDocker = Get-Command docker -ErrorAction SilentlyContinue
+if ($nativeDocker) { docker build --tag $Image $release }
+else { wsl.exe -d Remotely-Dev -u root --cd $release --exec docker build --tag $Image . }
 if ($LASTEXITCODE) { throw 'Image build failed.' }
-if ($Push) { docker push $Image; if ($LASTEXITCODE) { throw 'Image push failed.' } }
+if ($Push) {
+    if ($nativeDocker) { docker push $Image }
+    else { wsl.exe -d Remotely-Dev -u root --exec docker push $Image }
+    if ($LASTEXITCODE) { throw 'Image push failed.' }
+}
 Write-Output ('Use REMOTELY_IMAGE=' + $Image + ' in docker-compose/.env.')
