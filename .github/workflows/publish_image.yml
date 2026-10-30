@@ -1,5 +1,7 @@
 name: Publish own container image
 on:
+  push:
+    tags: ['image/v*']
   workflow_dispatch:
     inputs:
       release_tag:
@@ -29,6 +31,10 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
         run: |
           set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            RELEASE_TAG="${GITHUB_REF_NAME#image/}"
+            IMAGE_TAG="${RELEASE_TAG#v}"
+          fi
           [[ "$RELEASE_TAG" =~ ^v[0-9][a-zA-Z0-9._-]*$ ]]
           [[ "$IMAGE_TAG" =~ ^[0-9][a-zA-Z0-9._-]*$ ]]
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern server-linux-x64.zip --dir asset
