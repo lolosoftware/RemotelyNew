@@ -2,6 +2,7 @@
 @page "/downloads"
 @attribute [Authorize(Policy = PolicyNames.OrganizationAdminRequired)]
 @inherits AuthComponentBase
+@using Remotely.Shared.Helpers
 @inject IWebHostEnvironment HostEnv
 @inject NavigationManager NavManager
 
@@ -10,7 +11,11 @@
 <section class="card p-4 mb-4" aria-labelledby="windows-setup-title">
     <h2 id="windows-setup-title" class="h4">Windows</h2>
     <p>Download the complete setup bundle, extract it, then run <strong>Remotely_Install.exe</strong> as administrator. No PowerShell command or additional .NET installation is required.</p>
-    <label for="setup-server">HTTPS server</label><input id="setup-server" class="form-control mb-3" readonly value="@NavManager.BaseUri.TrimEnd('/')" />
+    <label for="setup-server">Server origin</label><input id="setup-server" class="form-control mb-3" readonly value="@NavManager.BaseUri.TrimEnd('/')" />
+    @if (InstallationPolicy.IsLoopbackHttp(new Uri(NavManager.BaseUri)))
+    {
+        <p class="alert alert-info" role="note">For a test on this same Windows PC, enter only <strong>@NavManager.BaseUri.TrimEnd('/')</strong> in setup and enable <strong>Local test (HTTP localhost only)</strong>. An agent on another computer needs an accessible HTTPS server. Do not paste the ZIP download URL into the server field.</p>
+    }
     <label for="setup-organization">Organization ID</label><input id="setup-organization" class="form-control mb-3" readonly value="@User?.OrganizationID" />
     <p>For existing installations, setup detects and preserves the device identity and configuration. An update interrupts active remote sessions.</p>
     <div class="d-flex gap-3 flex-wrap">

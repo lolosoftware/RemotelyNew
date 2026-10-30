@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Remotely.Shared.Helpers;
 
 namespace Remotely.Install;
 
@@ -12,7 +13,7 @@ internal static class Program
         {
             if (!args[i].StartsWith("--", StringComparison.Ordinal)) return 2;
             var name = args[i][2..];
-            if (name is "quiet" or "uninstall" or "verify-only") values[name] = "true";
+            if (name is "quiet" or "uninstall" or "verify-only" or "allow-loopback-http") values[name] = "true";
             else if (++i < args.Length) values[name] = args[i]; else return 2;
         }
         if (!values.ContainsKey("quiet") && !values.ContainsKey("verify-only"))
@@ -35,7 +36,7 @@ internal static class Program
             {
                 if (values.ContainsKey("uninstall")) InstallerEngine.Uninstall(Log).GetAwaiter().GetResult();
                 else InstallerEngine.Install(package, values.GetValueOrDefault("server") ?? "",
-                    values.GetValueOrDefault("organization") ?? "", Log, values.GetValueOrDefault("etag")).GetAwaiter().GetResult();
+                    values.GetValueOrDefault("organization") ?? "", Log, values.GetValueOrDefault("etag"), values.ContainsKey("allow-loopback-http")).GetAwaiter().GetResult();
                 return 0;
             }
             catch (Exception ex) { Log(ex.ToString()); return 1; }
@@ -50,6 +51,7 @@ internal sealed class InstallerForm : Form
     private readonly TextBox _organization = new() { Dock = DockStyle.Fill };
     private readonly TextBox _package = new() { Dock = DockStyle.Fill };
     private readonly TextBox _log = new() { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill };
+    private readonly CheckBox _localTest = new() { Text = "Local test (HTTP localhost only, on this computer)", AutoSize = true, Enabled = false };
     private readonly Button _install = new() { Text = "Install / update", AutoSize = true };
     private readonly bool _uninstall;
     private bool _busy;
@@ -62,14 +64,20 @@ internal sealed class InstallerForm : Form
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(20), ColumnCount = 2, RowCount = 8 };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150)); layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         void Add(string label, Control control) { var row = layout.Controls.Count / 2; layout.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left },0,row); layout.Controls.Add(control,1,row); }
-        Add("HTTPS server", _server); Add("Organization ID", _organization); Add("Offline ZIP package", _package);
-        _server.AccessibleName = "HTTPS server"; _organization.AccessibleName = "Organization ID"; _package.AccessibleName = "Offline ZIP package";
+        Add("Server origin", _server); Add("Organization ID", _organization); Add("Offline ZIP package", _package);
+        _server.AccessibleName = "Server origin"; _organization.AccessibleName = "Organization ID"; _package.AccessibleName = "Offline ZIP package";
         var browse = new Button { Text = "Choose package…", AutoSize = true };
         browse.Click += (_,_) => { using var picker = new OpenFileDialog { Filter = "Remotely package (*.zip)|*.zip" }; if(picker.ShowDialog(this) == DialogResult.OK) _package.Text = picker.FileName; };
         Add("", browse);
+        Add("", _localTest);
+        _localTest.AccessibleName = "Local test (HTTP localhost only)";
+        _server.TextChanged += (_,_) => {
+            _localTest.Enabled = Uri.TryCreate(_server.Text, UriKind.Absolute, out var uri) && InstallationPolicy.IsLoopbackHttp(uri);
+            if (!_localTest.Enabled) _localTest.Checked = false;
+        };
         Add("", new Label { Text = "Existing device identity and configuration are preserved. Active remote sessions will be interrupted during update.", AutoSize = true, MaximumSize = new Size(500,80) });
         Add("", _install); Add("Setup log", _log);
-        for (var i=0; i<6; i++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        for (var i=0; i<7; i++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         Controls.Add(layout);
         _package.Text = options.GetValueOrDefault("package") ?? Path.Combine(AppContext.BaseDirectory,
@@ -97,6 +105,7 @@ internal sealed class InstallerForm : Form
     {
         _busy = true; _install.Enabled = false; Environment.ExitCode = 1;
         var package = _package.Text; var server = _server.Text; var organization = _organization.Text;
+        var allowLoopbackHttp = _localTest.Checked;
         string? logPath = null;
         try
         {
@@ -110,7 +119,7 @@ internal sealed class InstallerForm : Form
             }
             await Task.Run(async () => {
                 if (_uninstall) await InstallerEngine.Uninstall(Log);
-                else await InstallerEngine.Install(package, server, organization, Log);
+                else await InstallerEngine.Install(package, server, organization, Log, allowLoopbackHttp: allowLoopbackHttp);
             });
             Environment.ExitCode = 0;
             _log.AppendText("Done. Log: " + logPath + Environment.NewLine);

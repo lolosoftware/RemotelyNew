@@ -145,6 +145,8 @@ public class UpdaterWin : IUpdater
             var process = new ProcessStartInfo(installer) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = setupDirectory };
             foreach (var argument in new[] { "--quiet", "--server", connectionInfo.Host, "--organization", connectionInfo.OrganizationID,
                 "--package", Path.Combine(setupDirectory, $"Remotely-Win-{platform}.zip") }) process.ArgumentList.Add(argument);
+            if (Remotely.Shared.Helpers.InstallationPolicy.IsLoopbackHttp(new Uri(connectionInfo.Host)))
+                process.ArgumentList.Add("--allow-loopback-http");
             using var headClient = _httpClientFactory.CreateClient();
             using var headRequest = new HttpRequestMessage(HttpMethod.Head, $"{serverUrl}/Content/Remotely-Setup-win-{platform}.zip");
             using var headResponse = await headClient.SendAsync(headRequest);

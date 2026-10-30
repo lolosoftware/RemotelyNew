@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidatePattern("^[a-z0-9][a-z0-9./:@_-]+$")][string]$Image = "ghcr.io/lolosoftware/remotelynew:0.1.0-dev")
+param([ValidatePattern("^[a-z0-9][a-z0-9./:@_-]+$")][string]$Image = "ghcr.io/lolosoftware/remotelynew:0.1.1-dev")
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 if (Get-Command docker -ErrorAction SilentlyContinue) {

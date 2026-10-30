@@ -7,11 +7,11 @@ on:
       release_tag:
         description: Release containing server-linux-x64.zip from Build-Release.ps1
         required: true
-        default: v0.1.0-dev
+        default: v0.1.1-dev
       image_tag:
         description: Immutable image version
         required: true
-        default: 0.1.0-dev
+        default: 0.1.1-dev
 permissions:
   contents: read
   packages: write

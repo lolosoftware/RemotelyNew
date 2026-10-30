@@ -11,7 +11,7 @@
 
 ![Home membre — appareils fictifs de recette](docs/screenshots/home-member.png)
 
-Image publiée : **ghcr.io/lolosoftware/remotelynew:0.1.0-dev** — [préversion et paquets compilés](https://github.com/lolosoftware/RemotelyNew/releases/tag/v0.1.0-dev).
+Image publiée : **ghcr.io/lolosoftware/remotelynew:0.1.1-dev** — [préversion et paquets compilés](https://github.com/lolosoftware/RemotelyNew/releases/tag/v0.1.1-dev).
 
 ## Sur ce PC
 
@@ -27,7 +27,7 @@ Ouvrir http://localhost:5080, créer son compte et inscrire son authentificateur
 ./Utilities/Stop-Local.ps1
 ~~~
 
-Le mode local HTTP est réservé à la recette sur ce PC. Pour des agents réels et la production, utiliser un nom DNS et HTTPS avec la configuration Caddy fournie. Les installateurs d'agents exigent HTTPS.
+Le mode local HTTP est réservé à la recette sur ce PC. Pour des agents réels et la production, utiliser un nom DNS et HTTPS avec la configuration Caddy fournie. Pour un agent sur ce même PC, le nouvel installateur propose Local test (HTTP localhost only) avec http://localhost:5080. Les serveurs distants exigent HTTPS.
 
 ## Reprendre le projet
 

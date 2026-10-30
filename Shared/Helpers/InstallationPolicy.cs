@@ -5,25 +5,31 @@ namespace Remotely.Shared.Helpers;
 
 public static class InstallationPolicy
 {
-    public static string NormalizeServer(string value)
+    public static bool IsLoopbackHttp(Uri uri) => uri.IsAbsoluteUri && uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback;
+
+    public static string NormalizeServer(string value, bool allowLoopbackHttp = false)
     {
-        if (!Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) || uri.Scheme != "https" ||
+        if (!Uri.TryCreate(value?.Trim(), UriKind.Absolute, out var uri) ||
             !string.IsNullOrEmpty(uri.UserInfo) || !string.IsNullOrEmpty(uri.Query) ||
             !string.IsNullOrEmpty(uri.Fragment) || uri.AbsolutePath != "/")
-            throw new InvalidOperationException("Specify the HTTPS origin of the server, without a path or credentials.");
-        return uri.GetLeftPart(UriPartial.Authority);
+            throw new InvalidOperationException("Enter only the server origin, for example https://support.example.com or http://localhost:5080 for a local test. Do not use the ZIP download URL.");
+        if (uri.Scheme == Uri.UriSchemeHttps || (allowLoopbackHttp && IsLoopbackHttp(uri)))
+            return uri.GetLeftPart(UriPartial.Authority);
+        if (IsLoopbackHttp(uri))
+            throw new InvalidOperationException("For http://localhost on this computer, enable Local test (HTTP localhost only). Remote computers require HTTPS.");
+        throw new InvalidOperationException("Remote servers require HTTPS. HTTP is supported only for an explicitly selected local test on this computer.");
     }
 
-    public static string MergeConfiguration(string? existing, string server, string organization)
+    public static string MergeConfiguration(string? existing, string server, string organization, bool allowLoopbackHttp = false)
     {
-        server = NormalizeServer(server);
+        server = NormalizeServer(server, allowLoopbackHttp);
         if (string.IsNullOrWhiteSpace(organization) || organization.Length > 128 ||
             organization.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '_' and not '.'))
             throw new InvalidOperationException("Invalid organization identifier.");
         if (existing is not null)
         {
             var config = JsonNode.Parse(existing)?.AsObject() ?? throw new InvalidOperationException("Invalid existing configuration.");
-            if (NormalizeServer(config["Host"]?.GetValue<string>() ?? "") != server ||
+            if (NormalizeServer(config["Host"]?.GetValue<string>() ?? "", allowLoopbackHttp) != server ||
                 config["OrganizationID"]?.GetValue<string>() != organization ||
                 string.IsNullOrWhiteSpace(config["DeviceID"]?.GetValue<string>()))
                 throw new InvalidOperationException("The existing server, organization or device identity does not match. Migration was stopped to preserve the configuration.");

@@ -1,7 +1,7 @@
 # Local recipe only. Production uses compose.modern.yml with Caddy/HTTPS.
 services:
   remotely:
-    image: ${REMOTELY_IMAGE:-ghcr.io/lolosoftware/remotelynew:0.1.0-dev}
+    image: ${REMOTELY_IMAGE:-ghcr.io/lolosoftware/remotelynew:0.1.1-dev}
     restart: unless-stopped
     init: true
     ports:

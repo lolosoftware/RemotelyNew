@@ -33,6 +33,33 @@ public class InstallationPolicyTests
     public void RejectsUnsafeServerOrigins(string server) => Assert.ThrowsException<InvalidOperationException>(() => InstallationPolicy.NormalizeServer(server));
 
     [TestMethod]
+    [DataRow("http://localhost:5080")]
+    [DataRow("http://127.0.0.1:5080")]
+    [DataRow("http://[::1]:5080")]
+    public void LocalHttpRequiresExplicitOptIn(string server)
+    {
+        Assert.ThrowsException<InvalidOperationException>(() => InstallationPolicy.NormalizeServer(server));
+        Assert.AreEqual(server, InstallationPolicy.NormalizeServer(server, allowLoopbackHttp: true));
+    }
+
+    [TestMethod]
+    [DataRow("http://192.168.1.10:5080")]
+    [DataRow("http://example.com")]
+    [DataRow("http://localhost.example.com")]
+    [DataRow("http://localhost:5080/Content/Remotely-Setup-win-x64.zip")]
+    [DataRow("http://user:secret@localhost:5080")]
+    [DataRow("http://localhost:5080/?token=secret")]
+    public void LocalOptInCannotAllowRemoteHttpOrDownloadUrls(string server) =>
+        Assert.ThrowsException<InvalidOperationException>(() => InstallationPolicy.NormalizeServer(server, allowLoopbackHttp: true));
+
+    [TestMethod]
+    public void LocalMigrationPreservesIdentityAndVerificationToken()
+    {
+        var legacy = "{\"DeviceID\":\"existing\",\"Host\":\"http://localhost:5080\",\"OrganizationID\":\"org-1\",\"ServerVerificationToken\":\"keep-me\"}";
+        Assert.AreEqual(legacy, InstallationPolicy.MergeConfiguration(legacy, "http://localhost:5080", "org-1", allowLoopbackHttp: true));
+    }
+
+    [TestMethod]
     [DataRow("../outside.txt")]
     [DataRow("/absolute.txt")]
     [DataRow("C:/outside.txt")]

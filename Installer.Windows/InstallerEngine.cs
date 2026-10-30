@@ -131,7 +131,7 @@ public static class InstallerEngine
         if (process.ExitCode != 0) throw new IOException("Service control failed: " + await output + await error);
     }
 
-    public static async Task Install(string package, string server, string organization, Action<string> log, string? etag = null)
+    public static async Task Install(string package, string server, string organization, Action<string> log, string? etag = null, bool allowLoopbackHttp = false)
     {
         if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
             throw new UnauthorizedAccessException("Run the installer as administrator.");
@@ -148,7 +148,7 @@ public static class InstallerEngine
         }
         if ((hadService || Directory.Exists(directory)) && !File.Exists(Path.Combine(directory, "ConnectionInfo.json")))
             throw new InvalidOperationException("An existing installation has no configuration. Restore it before continuing; no new identity was created.");
-        var configuration = InstallationPolicy.MergeConfiguration(ExistingConfiguration(), server, organization);
+        var configuration = InstallationPolicy.MergeConfiguration(ExistingConfiguration(), server, organization, allowLoopbackHttp);
         var publicKey = PinnedKey();
         if (File.Exists(Path.Combine(TrustRoot, "public-key.pem")))
         {

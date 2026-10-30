@@ -21,9 +21,9 @@ public class UpdateDownloader : IUpdateDownloader
     public async Task DownloadFile(string downloadUrl, string filePath)
     {
         var uri = new Uri(downloadUrl, UriKind.Absolute);
-        if (uri.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(uri.UserInfo) ||
+        if ((uri.Scheme != Uri.UriSchemeHttps && !InstallationPolicy.IsLoopbackHttp(uri)) || !string.IsNullOrEmpty(uri.UserInfo) ||
             !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
-            throw new InvalidOperationException("Updates require a canonical HTTPS artifact URL.");
+            throw new InvalidOperationException("Updates require HTTPS, except HTTP to this computer’s loopback address.");
         var artifact = CanonicalArtifact(uri);
         var keyPath = Path.Combine(TrustDirectory, "public-key.pem");
         if (!File.Exists(keyPath)) throw new InvalidOperationException("Update trust key has not been provisioned.");
