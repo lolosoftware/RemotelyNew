@@ -149,6 +149,15 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        // A replaced or expired session can outlive its cache entry until this event.
+        if (SessionInfo.IsDisposed ||
+            (!string.IsNullOrEmpty(SessionInfo.DesktopConnectionId) &&
+             SessionInfo.DesktopConnectionId != Context.ConnectionId))
+        {
+            await base.OnDisconnectedAsync(exception);
+            return;
+        }
+
         _logger.LogDebug("Desktop app disconnected. Streamer State: {state}.  Viewer Count: {count}",
             SessionInfo.StreamerState,
             ViewerList.Count);

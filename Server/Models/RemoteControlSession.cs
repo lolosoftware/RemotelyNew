@@ -12,7 +12,8 @@ namespace Remotely.Server.Models;
 /// </summary>
 public class RemoteControlSession : IDisposable
 {
-    private readonly ManualResetEventSlim _sessionReadySignal = new(false);
+    private object _sessionStateLock = new();
+    private TaskCompletionSource<bool> _sessionReadySignal = NewReadySignal();
     private bool _disposedValue;
     private StreamerState _streamerState;
 
@@ -85,6 +86,10 @@ public class RemoteControlSession : IDisposable
         }
 
         var clone = (RemoteControlSession)MemberwiseClone();
+        // MemberwiseClone must not share lifetime state with the original session.
+        clone._sessionStateLock = new();
+        clone._sessionReadySignal = NewReadySignal();
+        clone._disposedValue = false;
         clone.Created = DateTimeOffset.Now;
         clone.UnattendedSessionId = Guid.NewGuid();
         clone.AccessKey = RandomGenerator.GenerateAccessKey();
@@ -100,48 +105,57 @@ public class RemoteControlSession : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public Task<bool> WaitForSessionReady(TimeSpan waitTime)
+    internal bool IsDisposed
     {
-        return Task.Run(() => _sessionReadySignal.Wait(waitTime));
+        get { lock (_sessionStateLock) { return _disposedValue; } }
     }
 
-    public Task<bool> WaitForSessionReady(CancellationToken cancellationToken)
+    private static TaskCompletionSource<bool> NewReadySignal() =>
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public async Task<bool> WaitForSessionReady(TimeSpan waitTime)
     {
-        return Task.Run(() =>
+        Task<bool> ready;
+        lock (_sessionStateLock)
         {
-            try
-            {
-                _sessionReadySignal.Wait(cancellationToken);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        });
+            if (_disposedValue) return false;
+            ready = _sessionReadySignal.Task;
+        }
+        try { return await ready.WaitAsync(waitTime); }
+        catch (TimeoutException) { return false; }
+        catch (OperationCanceledException) { return false; }
+    }
+
+    public async Task<bool> WaitForSessionReady(CancellationToken cancellationToken)
+    {
+        Task<bool> ready;
+        lock (_sessionStateLock)
+        {
+            if (_disposedValue) return false;
+            ready = _sessionReadySignal.Task;
+        }
+        try { return await ready.WaitAsync(cancellationToken); }
+        catch (OperationCanceledException) { return false; }
     }
 
     internal void SetSessionReadyState(bool isReady)
     {
-        if (isReady)
+        lock (_sessionStateLock)
         {
-            _sessionReadySignal.Set();
-        }
-        else
-        {
-            _sessionReadySignal.Reset();
+            if (_disposedValue) return;
+            if (isReady) _sessionReadySignal.TrySetResult(true);
+            else if (_sessionReadySignal.Task.IsCompleted) _sessionReadySignal = NewReadySignal();
         }
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposedValue)
+        lock (_sessionStateLock)
         {
-            if (disposing)
-            {
-                _sessionReadySignal.Dispose();
-            }
+            if (_disposedValue) return;
             _disposedValue = true;
+            // Wake pending requests without leaving blocked worker threads behind.
+            _sessionReadySignal.TrySetResult(false);
         }
     }
 }

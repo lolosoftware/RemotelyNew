@@ -50,7 +50,7 @@ internal class RemoteControlSessionCache : IRemoteControlSessionCache
         {
             return AddOrUpdate(sessionId, session, (k, v) =>
             {
-                v.Dispose();
+                if (!ReferenceEquals(v, session)) v.Dispose();
                 return session;
             });
         }

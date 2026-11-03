@@ -120,8 +120,9 @@ public class ViewerHub : Hub<IViewerHubClient>
     public async IAsyncEnumerable<byte[]> GetDesktopStream()
     {
         await EnsureSessionAccess();
+        var streamId = SessionInfo.StreamId;
         var sessionResult = await _streamCache.WaitForStreamSession(
-            SessionInfo.StreamId,
+            streamId,
             Context.ConnectionId,
             TimeSpan.FromSeconds(30));
 
@@ -158,7 +159,7 @@ public class ViewerHub : Hub<IViewerHubClient>
         finally
         {
             signaler.EndSignal.Release();
-            _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
+            _logger.LogInformation("Streaming session ended for {sessionId}.", streamId);
         }
     }
 
