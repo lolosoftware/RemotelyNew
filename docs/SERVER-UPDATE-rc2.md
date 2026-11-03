@@ -16,6 +16,8 @@ Cette publication recompile uniquement le serveur et conserve les 36 fichiers de
 
 Environ 1,36 Gio du contenu publié est constitué d'agents et de clients d'assistance Windows x64/x86 et Linux, avec des formats historiques conservés pour la migration. La nouvelle construction Docker place ce contenu dans une couche indépendante du serveur. Elle ne supprime pas ces paquets et ne promet donc pas une forte réduction de la taille totale. Les publications serveur suivantes pourront réutiliser cette couche si son contenu reste identique. Le premier passage depuis rc.1 télécharge encore la nouvelle couche ; le gain concerne surtout les publications suivantes. Docker BuildKit et le frontend Dockerfile 1.19 sont utilisés par les scripts et le workflow.
 
+La construction rc.2 montre une couche téléchargements de 1,41 Go et une couche serveur de 111 Mo, auxquelles s'ajoute l'image de base. Les quelque 3 Go affichés par le moteur local incluent aussi le stockage containerd, qui conserve les formes compressées et décompressées ; ils ne correspondent pas au seul volume de données à télécharger. Voir la [documentation Docker sur l'espace disque containerd](https://docs.docker.com/engine/storage/containerd/#disk-space-usage).
+
 ## Appliquer pendant une maintenance
 
 1. Conserver l'image précédente et une sauvegarde cohérente de `datas`, serveur arrêté. Les procédures détaillées se trouvent dans [PRODUCTION-NPM.md](PRODUCTION-NPM.md).
