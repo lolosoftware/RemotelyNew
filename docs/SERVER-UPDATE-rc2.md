@@ -21,7 +21,7 @@ La construction rc.2 montre une couche téléchargements de 1,41 Go et une couch
 ## Appliquer pendant une maintenance
 
 1. Conserver l'image précédente et une sauvegarde cohérente de `datas`, serveur arrêté. Les procédures détaillées se trouvent dans [PRODUCTION-NPM.md](PRODUCTION-NPM.md).
-2. Dans votre configuration actuelle, remplacer uniquement la référence d'image par le digest rc.2 publié. Conserver le montage `./datas:/app/AppData`, les variables personnalisées, le port, le réseau et la configuration NPM. Le fichier de mise à jour `.env.remotelynew` ne contient que cette nouvelle référence ; ne pas remplacer un fichier `.env` personnel contenant d'autres paramètres.
+2. Dans votre configuration actuelle, remplacer la référence d'image par le digest rc.2 publié. Conserver le montage `./datas:/app/AppData`, les variables personnalisées, le port, le réseau et la configuration NPM. Le fichier de mise à jour `.env.remotelynew` ne contient que cette nouvelle référence ; ne pas remplacer un fichier `.env` personnel contenant d'autres paramètres. Pour une instance sur le port interne 5000, conserver ou ajouter le healthcheck décrit ci-dessous : celui intégré à l'image rc.2 publiée interroge encore 8080.
 3. Télécharger puis recréer le service avec les mêmes options Compose que votre installation habituelle (`-f`, `--env-file` et nom du projet s'ils sont utilisés) :
 
 ```bash
@@ -33,3 +33,19 @@ docker logs --since 5m remotely
 4. Vérifier connexion MFA, prise de main, fermeture puis reconnexion. Le redémarrage du serveur interrompt les prises de main en cours. Les droits déjà adaptés à l'utilisateur `app` restent valables.
 
 Ne pas modifier les paramètres CORS, les proxys de confiance ou les protections d'accès pour corriger l'exception de session. Cette publication ne touche pas à ces réglages. Aucun serveur de test supplémentaire ni aucune migration des données de production n'ont été démarrés sur le PC pour cette publication.
+
+## Contrôle de santé confirmé en production
+
+Le 4 novembre 2026, l'utilisateur a confirmé le fonctionnement du service et le passage au statut `healthy` après ajout du bloc suivant à son service Compose `remotely`, au même niveau que `environment` et `volumes` :
+
+```yaml
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "-H", "Host: remacces.groupe-mi.com", "http://localhost:5000/api/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+```
+
+Ce bloc est déjà présent dans `docker-compose/compose.npm.yml`. Dans un Compose historique où seule l'image a été remplacée, il faut également l'ajouter. Recréer le conteneur avec les options Compose habituelles pour appliquer le changement ; un simple `docker restart` ne recharge pas le Compose.
+
+Les sources du Dockerfile lisent désormais le port dans `ASPNETCORE_HTTP_PORTS` et le premier nom d'hôte dans `AllowedHosts`, avec repli sur 8080/localhost et traitement de `AllowedHosts=*`. Cette amélioration prendra effet lors de la prochaine construction d'image ; elle ne modifie pas le digest rc.2 déjà publié. Le bloc Compose confirmé reste la correction effective pour cette image et peut être conservé ensuite. Si `AllowedHosts` contient uniquement des domaines génériques comme `*.example.com`, définir un healthcheck Compose avec un nom d'hôte concret autorisé.

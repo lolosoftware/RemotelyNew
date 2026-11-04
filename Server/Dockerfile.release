@@ -14,5 +14,10 @@ ENV Remotely_ConnectionStrings__SQLite="Data Source=/app/AppData/Remotely.db"
 USER app
 EXPOSE 8080
 VOLUME ["/app/AppData"]
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s CMD curl --fail http://localhost:8080/api/healthcheck || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s CMD \
+    port="${ASPNETCORE_HTTP_PORTS:-8080}"; \
+    host="${AllowedHosts:-localhost}"; \
+    host="${host%%;*}"; \
+    if [ "$host" = '*' ] || [ -z "$host" ]; then host=localhost; fi; \
+    curl --fail --header "Host: $host" "http://localhost:${port%%;*}/api/healthcheck" || exit 1
 ENTRYPOINT ["dotnet", "Remotely_Server.dll"]
