@@ -15,8 +15,8 @@ importers:
         specifier: 10.0.11
         version: 10.0.11
       '@microsoft/signalr-protocol-msgpack':
-        specifier: 10.0.11
-        version: 10.0.11
+        specifier: 11.0.0
+        version: 11.0.0
       '@msgpack/msgpack':
         specifier: 3.1.3
         version: 3.1.3
@@ -31,11 +31,14 @@ packages:
     resolution: {integrity: sha512-wmglKKPDIkgV3aWlZzWECCPoGIkYCulzBwxG9+w7rc5BGapZ6cPMpoPOT8k36J0Ni7PPX6c/rsoMWfS4d1MUMg==}
     engines: {node: '>=6'}
 
-  '@microsoft/signalr-protocol-msgpack@10.0.11':
-    resolution: {integrity: sha512-7b8SFwexzaD62fPkO3t3AlYTNCaTLy+0GNndlzYIry8mXCcG4qSwbnI2vkwY623I+YyywPby+d97/jkEl3oGLA==}
+  '@microsoft/signalr-protocol-msgpack@11.0.0':
+    resolution: {integrity: sha512-cTG9aHX5dcwayQZqCx1jF0fEd3IHGlNCQFU6aHBCs/QcrDvi8wHWM9rFbGJ3EETzTLNmDva/zClso+ma3uNinQ==}
 
   '@microsoft/signalr@10.0.11':
     resolution: {integrity: sha512-FulOJ2EEtKvLQcswe/U7v8pzyXyk7Jua5xgWJPPwyQU/2Z9ORvKcVjyO75VvLsem+CJ1ORRexJ+7Bz1FCei2aw==}
+
+  '@microsoft/signalr@11.0.0':
+    resolution: {integrity: sha512-NNYwAOYFaVH8HRt3YWUFJYETZ66G8P3K/g3Ch/6Od+Rrdpe/Uafe8iZp81UI7TIM7qRzjDe5DKUAuwsnt391zg==}
 
   '@msgpack/msgpack@2.8.0':
     resolution: {integrity: sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==}
@@ -242,13 +245,25 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@7.5.14:
+    resolution: {integrity: sha512-u9Oi2nQ8SZnTUAf6spLLKF5TyqoG3Nbbrd4ai6Sjo4P24bycDewhQqtNMIg4bFpnpH/TD4qk4IuAVhT0HIIqug==}
+    engines: {node: '>=8.3.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
 snapshots:
 
   '@fortawesome/fontawesome-free@7.3.1': {}
 
-  '@microsoft/signalr-protocol-msgpack@10.0.11':
+  '@microsoft/signalr-protocol-msgpack@11.0.0':
     dependencies:
-      '@microsoft/signalr': 10.0.11
+      '@microsoft/signalr': 11.0.0
       '@msgpack/msgpack': 2.8.0
     transitivePeerDependencies:
       - bufferutil
@@ -262,6 +277,18 @@ snapshots:
       fetch-cookie: 2.2.0
       node-fetch: 2.7.0
       ws: 7.5.13
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@microsoft/signalr@11.0.0':
+    dependencies:
+      abort-controller: 3.0.0
+      eventsource: 2.0.2
+      fetch-cookie: 2.2.0
+      node-fetch: 2.7.0
+      ws: 7.5.14
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -407,3 +434,5 @@ snapshots:
       webidl-conversions: 3.0.1
 
   ws@7.5.13: {}
+
+  ws@7.5.14: {}
