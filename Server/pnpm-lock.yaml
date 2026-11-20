@@ -12,8 +12,8 @@ importers:
         specifier: 7.3.1
         version: 7.3.1
       '@microsoft/signalr':
-        specifier: 10.0.11
-        version: 10.0.11
+        specifier: 11.0.0
+        version: 11.0.0
       '@microsoft/signalr-protocol-msgpack':
         specifier: 10.0.11
         version: 10.0.11
@@ -34,8 +34,8 @@ packages:
   '@microsoft/signalr-protocol-msgpack@10.0.11':
     resolution: {integrity: sha512-7b8SFwexzaD62fPkO3t3AlYTNCaTLy+0GNndlzYIry8mXCcG4qSwbnI2vkwY623I+YyywPby+d97/jkEl3oGLA==}
 
-  '@microsoft/signalr@10.0.11':
-    resolution: {integrity: sha512-FulOJ2EEtKvLQcswe/U7v8pzyXyk7Jua5xgWJPPwyQU/2Z9ORvKcVjyO75VvLsem+CJ1ORRexJ+7Bz1FCei2aw==}
+  '@microsoft/signalr@11.0.0':
+    resolution: {integrity: sha512-NNYwAOYFaVH8HRt3YWUFJYETZ66G8P3K/g3Ch/6Od+Rrdpe/Uafe8iZp81UI7TIM7qRzjDe5DKUAuwsnt391zg==}
 
   '@msgpack/msgpack@2.8.0':
     resolution: {integrity: sha512-h9u4u/jiIRKbq25PM+zymTyW6bhTzELvOoUd+AvYriWOAKpLGnIamaET3pnHYoI5iYphAHBI4ayx0MehR+VVPQ==}
@@ -230,8 +230,8 @@ packages:
   whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
-  ws@7.5.13:
-    resolution: {integrity: sha512-rsKI6xDBFVf4r/x8XyChGK04QR/XHroxs/jUcoWvtEZM8TPU/X/uIY9B1CsSzYws9ZJb/6bbBu7dPhFW00CAoA==}
+  ws@7.5.14:
+    resolution: {integrity: sha512-u9Oi2nQ8SZnTUAf6spLLKF5TyqoG3Nbbrd4ai6Sjo4P24bycDewhQqtNMIg4bFpnpH/TD4qk4IuAVhT0HIIqug==}
     engines: {node: '>=8.3.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -248,20 +248,20 @@ snapshots:
 
   '@microsoft/signalr-protocol-msgpack@10.0.11':
     dependencies:
-      '@microsoft/signalr': 10.0.11
+      '@microsoft/signalr': 11.0.0
       '@msgpack/msgpack': 2.8.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
       - utf-8-validate
 
-  '@microsoft/signalr@10.0.11':
+  '@microsoft/signalr@11.0.0':
     dependencies:
       abort-controller: 3.0.0
       eventsource: 2.0.2
       fetch-cookie: 2.2.0
       node-fetch: 2.7.0
-      ws: 7.5.13
+      ws: 7.5.14
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -406,4 +406,4 @@ snapshots:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
 
-  ws@7.5.13: {}
+  ws@7.5.14: {}
